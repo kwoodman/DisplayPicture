@@ -1,0 +1,87 @@
+﻿@page "/"
+
+<PageTitle>Display Pictures</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Display Pictures</MudText>
+
+<MudPaper @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Height="200px" Outlined="true" Class="@DragClass">
+    @if (!Clearing)
+    {
+        <InputFile OnChange="OnInputFileChanged" multiple class="absolute mud-width-full mud-height-full overflow-hidden z-2" style="opacity:0;" accept="image/png, image/gif, image/jpeg" />
+    }
+    <MudText Typo="Typo.h6">Drag and drop the images here or click to select them</MudText>
+    @foreach (var file in pictures)
+    {
+        <MudChip Color="Color.Dark" Text="@file.name" />
+    }
+</MudPaper>
+<MudToolBar DisableGutters="true" Class="gap-4">        
+    <MudButton OnClick="Clear" Disabled="@(!pictures.Any())" Color="Color.Error" Variant="Variant.Filled">Clear File List</MudButton>
+</MudToolBar>
+<CascadingValue Value="pictures">
+   <PictureList></PictureList>
+</CascadingValue>
+
+@code {
+
+    private bool Clearing = false;
+    private static string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
+    private string DragClass = DefaultDragClass;
+    public List<PictureModel> pictures = new List<PictureModel>();
+
+
+
+    private async void OnInputFileChanged(InputFileChangeEventArgs e)
+    {        
+        try
+        {
+            ClearDragClass();
+            var files = e.GetMultipleFiles();
+            foreach (var file in files)
+            {
+                await using MemoryStream fs = new MemoryStream();
+                await file.OpenReadStream(maxAllowedSize: 1048576).CopyToAsync(fs);
+                byte[] somBytes = GetBytes(fs);                
+                PictureModel pic = new PictureModel();
+                pic.name = file.Name;
+                pic.src =Convert.ToBase64String(somBytes, 0, somBytes.Length);
+                pic.sortorder = pictures.Count()+1;
+                pictures.Add(pic);
+            }
+            base.StateHasChanged();
+        }
+
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.Print("ERROR: " + ex.Message + Environment.NewLine);
+        }
+    }
+
+    private async Task Clear()
+    {
+        Clearing = true;
+        pictures.Clear();
+        ClearDragClass();
+        await Task.Delay(100);
+        Clearing = false;
+    }
+
+    private void SetDragClass()
+    {
+        DragClass = $"{DefaultDragClass} mud-border-primary";
+    }
+
+    private void ClearDragClass()
+    {
+        DragClass = DefaultDragClass;
+    }
+
+    public static byte[] GetBytes(Stream stream)
+    {
+        var bytes = new byte[stream.Length];
+        stream.Seek(0, SeekOrigin.Begin);
+        stream.ReadAsync(bytes, 0, bytes.Length);
+        stream.Dispose();
+        return bytes;
+    }
+}

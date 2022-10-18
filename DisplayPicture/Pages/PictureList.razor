@@ -1,0 +1,32 @@
+﻿@inject IJSRuntime JSRuntime
+
+<MudGrid Spacing="2" >
+	 @foreach (var item in pictures)
+	{
+		<MudItem>
+			<MudCard>
+				<div style="padding:10px"><img src="data:image/png;base64, @item.src" alt="@item.name" height="200" width="350"></div>
+
+				<MudCardContent>
+					<MudText Typo="Typo.h5">@item.name  @item.sortorder @pictures.Count</MudText>
+				</MudCardContent>
+				<MudCardActions>
+					<MudButton Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Disabled="@(item.sortorder==1?true:false)" />
+					<MudButton Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Disabled="@(item.sortorder==pictures.Count?true:false)" />
+					<MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Close" Size="Size.Small" />
+					<MudButton Color="Color.Primary" StartIcon="@Icons.Filled.Monitor" FullWidth="true" OnClick="ShowImage">Display Picture</MudButton>
+				</MudCardActions>
+			</MudCard>
+		</MudItem>
+	}
+</MudGrid>
+@code {
+	[CascadingParameter]
+	public List<PictureModel> pictures { get; set; }
+	//pictures.Sort(x=>x.sortorder)
+
+	private void ShowImage()
+	{
+
+	}
+}
